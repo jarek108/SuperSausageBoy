@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &754569215663103864
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5475890061336684611}
+  - component: {fileID: 4828281501349181430}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5475890061336684611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754569215663103864}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4828281501349181430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754569215663103864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25ad37ca70cf831769c0fc5fdde3d6ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Core.AudioManager
+  jumpClip: {fileID: 8300000, guid: 45c88042010e96205a950d30df65530c, type: 3}
+  landClip: {fileID: 8300000, guid: e576b6a319ab9596e9966345b1fddf18, type: 3}
+  deathClip: {fileID: 8300000, guid: 9e2673c891f2ebfe69d8aa60abba9a96, type: 3}
+  wallSlideClip: {fileID: 8300000, guid: d588a6bee03b9c351ae1c4e93791cb14, type: 3}
+  goalClip: {fileID: 8300000, guid: f51e8616f0053410181a3a80353925c7, type: 3}
+  levelMusic: {fileID: 8300000, guid: 5c6c2aa660071f9f8a4a3c5a5ef9e642, type: 3}
+  introMusic: {fileID: 8300000, guid: 4e12a77bceb1f1b65bd050476b3b1bc0, type: 3}
+  winMusic: {fileID: 8300000, guid: 341e688551bd58a298ed9d2904ae812c, type: 3}
+  musicVolume: 0.55
+  sfxVolume: 0.9
+  musicFade: 0.8
+  sfxVoices: 8

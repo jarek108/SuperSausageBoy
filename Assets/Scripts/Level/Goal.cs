@@ -1,4 +1,5 @@
 using UnityEngine;
+using SuperSausageBoy.Core;
 
 namespace SuperSausageBoy.Level
 {
@@ -25,6 +26,8 @@ namespace SuperSausageBoy.Level
 
             if (rescueEffectPrefab != null)
                 Instantiate(rescueEffectPrefab, transform.position, Quaternion.identity);
+
+            AudioManager.Instance?.PlaySfx(AudioManager.Sfx.Goal);
 
             LevelManager.Instance?.CompleteLevel();
         }

@@ -43,17 +43,22 @@ namespace SuperSausageBoy.EditorTools
             Directory.CreateDirectory(SCENES);
             Directory.CreateDirectory(SETTINGS);
 
+            // Generate retro SFX before wiring the AudioManager that references them.
+            SfxGenerator.Generate();
+
             var hazardPrefabs = BuildHazardPrefabs();
             var greasePrefab = BuildGreasePrefab();
             var playerPrefab = BuildPlayerPrefab(greasePrefab);
             var goalPrefab = BuildGoalPrefab();
             var tilePrefab = BuildTilePrefab("Tile", false);
             var wallPrefab = BuildTilePrefab("WallTile", false);
+            var audioPrefab = BuildAudioManagerPrefab();
 
             // Build levels
             for (int i = 0; i < 5; i++)
-                BuildLevel(i + 1, playerPrefab, goalPrefab, tilePrefab, wallPrefab, hazardPrefabs);
+                BuildLevel(i + 1, playerPrefab, goalPrefab, tilePrefab, wallPrefab, hazardPrefabs, audioPrefab);
 
+            BuildStoryScene();
             BuildWinScene();
             ConfigureBuildSettings();
 
@@ -66,7 +71,87 @@ namespace SuperSausageBoy.EditorTools
         static Sprite Spr(string name) =>
             AssetDatabase.LoadAssetAtPath<Sprite>($"{GEN}/{name}.png");
 
+        // ---------- Audio ----------
+        static AudioClip Clip(string path) =>
+            AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+
+        // Builds the persistent AudioManager prefab, wiring generated SFX +
+        // music clips. Returns null gracefully if clips aren't present yet.
+        static GameObject BuildAudioManagerPrefab()
+        {
+            var go = new GameObject("AudioManager");
+            var am = go.AddComponent<SuperSausageBoy.Core.AudioManager>();
+
+            am.jumpClip      = Clip("Assets/Audio/SFX/jump.wav");
+            am.landClip      = Clip("Assets/Audio/SFX/land.wav");
+            am.deathClip     = Clip("Assets/Audio/SFX/death.wav");
+            am.wallSlideClip = Clip("Assets/Audio/SFX/wallslide.wav");
+            am.goalClip      = Clip("Assets/Audio/SFX/goal.wav");
+
+            am.levelMusic = Clip("Assets/Audio/Music/level_theme.mp3");
+            am.introMusic = Clip("Assets/Audio/Music/intro_theme.mp3");
+            am.winMusic   = Clip("Assets/Audio/Music/win_theme.mp3");
+
+            var path = $"{PREFABS}/AudioManager.prefab";
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
         // ---------- Prefabs ----------
+
+        // Builds a self-destructing one-shot ParticleSystem prefab for "juice"
+        // bursts (death splat chunks, landing dust). Plays on awake, then the
+        // attached ParticleAutoDestroy cleans it up when finished.
+        static GameObject BuildParticlePrefab(string name, Color color, int count,
+            float speed, float lifetime, float gravity, float size, bool burst)
+        {
+            var go = new GameObject(name);
+            var ps = go.AddComponent<ParticleSystem>();
+
+            // Configure via modules (ParticleSystem must exist before editing).
+            var main = ps.main;
+            main.duration = 1f;
+            main.loop = false;
+            main.startLifetime = lifetime;
+            main.startSpeed = speed;
+            main.startSize = size;
+            main.startColor = color;
+            main.gravityModifier = gravity;
+            main.playOnAwake = true;
+            main.maxParticles = Mathf.Max(count, 32);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            if (burst)
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
+
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.15f;
+
+            // Fade out over lifetime.
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var grad = new Gradient();
+            grad.SetKeys(
+                new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = grad;
+
+            // Renderer: use a simple sprite material so it shows in 2D/URP.
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sortingOrder = 20;
+
+            go.AddComponent<SuperSausageBoy.Core.ParticleAutoDestroy>();
+
+            var path = $"{PREFABS}/{name}.prefab";
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
 
         static GameObject BuildGreasePrefab()
         {
@@ -85,7 +170,12 @@ namespace SuperSausageBoy.EditorTools
             var go = new GameObject("SuperSausageBoy");
             go.tag = "Player";
 
-            var sr = go.AddComponent<SpriteRenderer>();
+            // Visual lives on a child so we can squash/stretch the sprite without
+            // deforming the collider on the root.
+            var visual = new GameObject("Visual");
+            visual.transform.SetParent(go.transform);
+            visual.transform.localPosition = Vector3.zero;
+            var sr = visual.AddComponent<SpriteRenderer>();
             sr.sprite = Spr("SausageBoy");
             sr.sortingOrder = 10;
 
@@ -102,6 +192,17 @@ namespace SuperSausageBoy.EditorTools
 
             var health = go.AddComponent<PlayerHealth>();
             health.greaseSplatPrefab = grease;
+            health.deathBurstPrefab = BuildParticlePrefab(
+                "DeathBurst", new Color(0.71f, 0.27f, 0.18f), count: 24,
+                speed: 7f, lifetime: 0.6f, gravity: 1.2f, size: 0.12f, burst: true);
+
+            // Juice: squash/stretch on the visual + feedback glue (audio/shake).
+            var squash = visual.AddComponent<SquashStretch>();
+            squash.movement = move;
+            var feedback = go.AddComponent<PlayerFeedback>();
+            feedback.landingDustPrefab = BuildParticlePrefab(
+                "LandingDust", new Color(0.78f, 0.72f, 0.58f), count: 10,
+                speed: 2.5f, lifetime: 0.35f, gravity: 0.1f, size: 0.1f, burst: true);
 
             // Trigger collider child for hazard/goal detection (separate from solid box).
             var trig = go.AddComponent<CircleCollider2D>();
@@ -221,7 +322,8 @@ namespace SuperSausageBoy.EditorTools
         // ---------- Levels ----------
 
         static void BuildLevel(int n, GameObject player, GameObject goal,
-            GameObject tile, GameObject wall, Dictionary<string, GameObject> hz)
+            GameObject tile, GameObject wall, Dictionary<string, GameObject> hz,
+            GameObject audioPrefab)
         {
             var scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -241,6 +343,19 @@ namespace SuperSausageBoy.EditorTools
             ppc.refResolutionY = 180;
             ppc.pixelSnapping = true;
             ppc.upscaleRT = false;
+
+            // Juice: screen shake on the camera (additive, runs after follow).
+            camGO.AddComponent<SuperSausageBoy.Core.ScreenShake>();
+
+            // Persistent AudioManager (singleton guards against duplicates).
+            if (audioPrefab != null)
+                PrefabUtility.InstantiatePrefab(audioPrefab);
+
+            // Music starter on its OWN scene object so it isn't destroyed along
+            // with a duplicate AudioManager on reload.
+            var musicStarter = new GameObject("MusicStarter");
+            musicStarter.AddComponent<SuperSausageBoy.Core.LevelAudioStarter>().track =
+                SuperSausageBoy.Core.LevelAudioStarter.Track.Level;
 
             // Light2D global (URP 2D needs light to see sprites with lit, but default is unlit -> fine)
 
@@ -306,6 +421,132 @@ namespace SuperSausageBoy.EditorTools
             hud.levelText = level; hud.timerText = time; hud.deathText = death;
         }
 
+        static void BuildStoryScene()
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // Camera (UI only; solid black backdrop behind letterboxed art).
+            var camGO = new GameObject("Main Camera");
+            camGO.tag = "MainCamera";
+            var cam = camGO.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.backgroundColor = Color.black;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            camGO.transform.position = new Vector3(0, 0, -10);
+
+            // Canvas
+            var canvasGO = new GameObject("Story Canvas");
+            var canvas = canvasGO.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGO.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280, 720);
+            canvasGO.AddComponent<GraphicRaycaster>();
+
+            // Full-screen story image.
+            var imgGO = new GameObject("StoryImage");
+            imgGO.transform.SetParent(canvasGO.transform);
+            var img = imgGO.AddComponent<Image>();
+            img.preserveAspect = true;
+            var irt = img.rectTransform;
+            irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+            irt.offsetMin = irt.offsetMax = Vector2.zero;
+
+            // Caption (bottom).
+            var capGO = new GameObject("Caption");
+            capGO.transform.SetParent(canvasGO.transform);
+            var cap = capGO.AddComponent<Text>();
+            cap.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            cap.fontSize = 30;
+            cap.color = Color.white;
+            cap.alignment = TextAnchor.LowerCenter;
+            cap.horizontalOverflow = HorizontalWrapMode.Wrap;
+            cap.verticalOverflow = VerticalWrapMode.Overflow;
+            var crt = cap.rectTransform;
+            crt.anchorMin = new Vector2(0.1f, 0f);
+            crt.anchorMax = new Vector2(0.9f, 0.22f);
+            crt.offsetMin = crt.offsetMax = Vector2.zero;
+            // simple readability backdrop (semi-transparent strip)
+            var capBg = new GameObject("CaptionBG");
+            capBg.transform.SetParent(canvasGO.transform);
+            capBg.transform.SetSiblingIndex(capGO.transform.GetSiblingIndex());
+            var capBgImg = capBg.AddComponent<Image>();
+            capBgImg.color = new Color(0f, 0f, 0f, 0.45f);
+            var cbrt = capBgImg.rectTransform;
+            cbrt.anchorMin = new Vector2(0f, 0f);
+            cbrt.anchorMax = new Vector2(1f, 0.24f);
+            cbrt.offsetMin = cbrt.offsetMax = Vector2.zero;
+
+            // Black fader overlay (on top of everything).
+            var fadeGO = new GameObject("Fader");
+            fadeGO.transform.SetParent(canvasGO.transform);
+            var fadeImg = fadeGO.AddComponent<Image>();
+            fadeImg.color = Color.black;
+            var frt = fadeImg.rectTransform;
+            frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one;
+            frt.offsetMin = frt.offsetMax = Vector2.zero;
+            var fadeGroup = fadeGO.AddComponent<CanvasGroup>();
+            fadeGroup.blocksRaycasts = false;
+
+            // Audio sources.
+            var audioGO = new GameObject("StoryAudio");
+            var voiceSrc = audioGO.AddComponent<AudioSource>();
+            voiceSrc.playOnAwake = false;
+            var musicSrc = audioGO.AddComponent<AudioSource>();
+            musicSrc.playOnAwake = false;
+
+            // Controller + panels.
+            var ctrlGO = new GameObject("StoryController");
+            var ctrl = ctrlGO.AddComponent<SuperSausageBoy.Story.StoryController>();
+            ctrl.displayImage = img;
+            ctrl.captionText = cap;
+            ctrl.voiceSource = voiceSrc;
+            ctrl.musicSource = musicSrc;
+            ctrl.fader = fadeGroup;
+            ctrl.introMusic = Clip("Assets/Audio/Music/intro_theme.mp3");
+            ctrl.nextScene = "Level1";
+
+            var captions = StoryCaptions();
+            var panels = new SuperSausageBoy.Story.StoryController.Panel[6];
+            for (int i = 0; i < 6; i++)
+            {
+                panels[i] = new SuperSausageBoy.Story.StoryController.Panel
+                {
+                    image = StorySprite($"panel{i + 1}"),
+                    caption = i < captions.Length ? captions[i] : "",
+                    narration = Clip($"Assets/Audio/Voice/narration_{i + 1}.wav"),
+                };
+            }
+            ctrl.panels = panels;
+
+            EditorSceneManager.SaveScene(scene, $"{SCENES}/Story.unity");
+        }
+
+        // Loads a story panel PNG as a Sprite (importer set up below if needed).
+        static Sprite StorySprite(string name)
+        {
+            string path = $"Assets/Art/Story/{name}.png";
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && importer.textureType != TextureImporterType.Sprite)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        // Narration captions (kept in sync with story_script.md).
+        static string[] StoryCaptions() => new[]
+        {
+            "In a warm little kitchen at the edge of the world lived Super Sausage Boy.",
+            "And beside him, glowing golden, was the one he loved most \u2014 Hot Bun Girl.",
+            "But deep in the dark, something charred and cruel was watching. The Griller.",
+            "In a flash of smoke and sparks, Hot Bun Girl was gone \u2014 carried off beyond the saws.",
+            "Super Sausage Boy did not hesitate. He ran. For her, he would cross any danger.",
+            "Run fast. Jump true. Leap from the walls. The gauntlet awaits.",
+        };
+
         static void BuildWinScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -336,6 +577,8 @@ namespace SuperSausageBoy.EditorTools
         static void ConfigureBuildSettings()
         {
             var list = new List<EditorBuildSettingsScene>();
+            // Story intro plays first.
+            list.Add(new EditorBuildSettingsScene($"{SCENES}/Story.unity", true));
             for (int i = 1; i <= 5; i++)
                 list.Add(new EditorBuildSettingsScene($"{SCENES}/Level{i}.unity", true));
             list.Add(new EditorBuildSettingsScene($"{SCENES}/Win.unity", true));

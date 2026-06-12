@@ -31,7 +31,11 @@ namespace SuperSausageBoy.Player
         [Tooltip("Apex height when the button is tapped (min jump).")]
         public float minJumpHeight = 1.0f;
         [Tooltip("Time from ground to jump apex (sec). Controls gravity feel.")]
-        public float timeToJumpApex = 0.38f;
+        public float timeToJumpApex = 0.36f;
+        [Tooltip("Gravity multiplier while falling — >1 makes the descent snappier than the rise (classic precision-platformer feel).")]
+        public float fallGravityMultiplier = 1.7f;
+        [Tooltip("Extra gravity multiplier while rising but NOT holding jump — gives weighty, responsive short hops.")]
+        public float lowJumpGravityMultiplier = 2.0f;
 
         [Header("Assist (game feel)")]
         [Tooltip("Grace period to still jump after leaving a ledge.")]
@@ -71,12 +75,19 @@ namespace SuperSausageBoy.Player
         }
         Vector2 _input;
         bool _sprintHeld;
+        bool _jumpHeld;
 
         // exposed for animation/feedback hooks
         public Vector2 Velocity => _velocity;
         public bool IsWallSliding { get; private set; }
         public int FacingDir { get; private set; } = 1;
         public Controller2D Controller => _controller;
+
+        // feedback events (subscribed by juice/audio systems)
+        public System.Action OnJumped;
+        public System.Action<float> OnLanded;   // arg: impact speed (abs vertical velocity)
+        bool _wasGroundedLastFrame;
+        float _lastAirVelocityY;
 
         // sub-pixel accumulation for crisp pixel-perfect movement
         [Header("Pixel Perfect")]
@@ -100,8 +111,8 @@ namespace SuperSausageBoy.Player
 
         public void OnJump(InputAction.CallbackContext ctx)
         {
-            if (ctx.performed) _jumpBufferCounter = jumpBufferTime;     // buffer the press
-            if (ctx.canceled) OnJumpReleased();                        // variable height
+            if (ctx.performed) { _jumpBufferCounter = jumpBufferTime; _jumpHeld = true; }  // buffer the press
+            if (ctx.canceled) { OnJumpReleased(); _jumpHeld = false; }                     // variable height
         }
 
         void Update()
@@ -125,6 +136,9 @@ namespace SuperSausageBoy.Player
             ApplyGravity(dt);
             HandleWallStick(dt);
 
+            // Track the airborne fall speed so we know landing impact below.
+            if (!_controller.collisions.below) _lastAirVelocityY = _velocity.y;
+
             Vector2 delta = _velocity * dt;
             delta = ApplySubPixelSnap(delta);
 
@@ -136,6 +150,12 @@ namespace SuperSausageBoy.Player
                 if (_controller.collisions.below) _subPixelRemainder.y = 0f;
                 _velocity.y = 0f;
             }
+
+            // Landing detection: airborne last frame, grounded now.
+            bool groundedNow = _controller.collisions.below;
+            if (groundedNow && !_wasGroundedLastFrame)
+                OnLanded?.Invoke(Mathf.Abs(_lastAirVelocityY));
+            _wasGroundedLastFrame = groundedNow;
         }
 
         void ApplyHorizontal(float dt)
@@ -151,7 +171,16 @@ namespace SuperSausageBoy.Player
 
         void ApplyGravity(float dt)
         {
-            _velocity.y += _gravity * dt;
+            // Asymmetric gravity for a snappy, weighty arc (precision-platformer feel):
+            //  - falling: multiply gravity so the descent is faster than the ascent.
+            //  - rising without holding jump: heavier gravity for crisp short hops.
+            float gravityScale = 1f;
+            if (_velocity.y < 0f)
+                gravityScale = fallGravityMultiplier;
+            else if (_velocity.y > 0f && !_jumpHeld)
+                gravityScale = lowJumpGravityMultiplier;
+
+            _velocity.y += _gravity * gravityScale * dt;
 
             if (IsWallSliding && _velocity.y < -wallSlideSpeedMax)
                 _velocity.y = -wallSlideSpeedMax;
@@ -192,6 +221,7 @@ namespace SuperSausageBoy.Player
                 _velocity.y = _maxJumpVelocity;
                 _coyoteCounter = 0f;
                 _jumpBufferCounter = 0f;
+                OnJumped?.Invoke();
             }
         }
 
@@ -219,6 +249,7 @@ namespace SuperSausageBoy.Player
                 _velocity.y = wallLeap.y;
             }
             _velocityXSmoothing = 0f;
+            OnJumped?.Invoke();
         }
 
         void OnJumpReleased()
@@ -264,6 +295,7 @@ namespace SuperSausageBoy.Player
             _coyoteCounter = 0f;
             _jumpBufferCounter = 0f;
             _timeToWallUnstick = 0f;
+            _jumpHeld = false;
             IsWallSliding = false;
         }
 
@@ -277,7 +309,7 @@ namespace SuperSausageBoy.Player
             _input.x = moveX;
             _sprintHeld = sprint;
         }
-        public void PressJump() => _jumpBufferCounter = jumpBufferTime;
-        public void ReleaseJump() => OnJumpReleased();
+        public void PressJump() { _jumpBufferCounter = jumpBufferTime; _jumpHeld = true; }
+        public void ReleaseJump() { OnJumpReleased(); _jumpHeld = false; }
     }
 }
