@@ -150,4 +150,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 623f542f3e3f6bc169bf9aeba4fa5465, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Hazards.Spike
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Hazards.Spike

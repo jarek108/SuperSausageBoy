@@ -150,6 +150,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f36bc3914ab597cba8d639825090b74, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Hazards.CrumblingBlock
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Hazards.CrumblingBlock
   crumbleDelay: 0.4
   respawnDelay: 2

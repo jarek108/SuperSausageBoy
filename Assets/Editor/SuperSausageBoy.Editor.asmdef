@@ -1,0 +1,23 @@
+{
+    "name": "SuperSausageBoy.Editor",
+    "rootNamespace": "SuperSausageBoy.EditorTools",
+    "references": [
+        "SuperSausageBoy.Runtime",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor",
+        "Unity.Cinemachine",
+        "Unity.2D.PixelPerfect"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

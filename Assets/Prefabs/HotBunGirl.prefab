@@ -242,5 +242,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af98f340b2652a71e9bcdb4d7ecef6a4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Level.Goal
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Level.Goal
   rescueEffectPrefab: {fileID: 0}

@@ -96,6 +96,8 @@ namespace SuperSausageBoy.Player
         public bool snapToPixel = true;
         Vector2 _subPixelRemainder;
 
+        PlayerInput _playerInput;
+
         void Start()
         {
             // Kinematics: derive gravity & jump velocities from desired height/time.
@@ -105,7 +107,38 @@ namespace SuperSausageBoy.Player
             _minJumpVelocity = Mathf.Sqrt(2f * Mathf.Abs(_gravity) * minJumpHeight);
         }
 
-        // Input System message callbacks (PlayerInput "Send Messages" / Invoke Unity Events)
+        void OnEnable()
+        {
+            // Wire the new Input System explicitly. The PlayerInput component is
+            // set to InvokeCSharpEvents, which (unlike SendMessages) does NOT
+            // auto-call OnMove/OnJump methods — we MUST subscribe to
+            // onActionTriggered ourselves, dispatching by action name. This is the
+            // bug-resistant, testable path (verified by InputIntegrationTest).
+            _playerInput = GetComponent<PlayerInput>();
+            if (_playerInput != null)
+                _playerInput.onActionTriggered += OnActionTriggered;
+        }
+
+        void OnDisable()
+        {
+            if (_playerInput != null)
+                _playerInput.onActionTriggered -= OnActionTriggered;
+        }
+
+        /// <summary>
+        /// Single dispatch point for all gameplay actions. Routes each
+        /// InputAction.CallbackContext to the right handler by action name.
+        /// </summary>
+        public void OnActionTriggered(InputAction.CallbackContext ctx)
+        {
+            switch (ctx.action.name)
+            {
+                case "Move":   OnMove(ctx);   break;
+                case "Jump":   OnJump(ctx);   break;
+                case "Sprint": OnSprint(ctx); break;
+            }
+        }
+
         public void OnMove(InputAction.CallbackContext ctx) => _input.x = ctx.ReadValue<float>();
         public void OnSprint(InputAction.CallbackContext ctx) => _sprintHeld = ctx.ReadValueAsButton();
 

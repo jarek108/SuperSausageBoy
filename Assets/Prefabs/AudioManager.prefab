@@ -43,7 +43,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 25ad37ca70cf831769c0fc5fdde3d6ab, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Core.AudioManager
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Core.AudioManager
   jumpClip: {fileID: 8300000, guid: 45c88042010e96205a950d30df65530c, type: 3}
   landClip: {fileID: 8300000, guid: e576b6a319ab9596e9966345b1fddf18, type: 3}
   deathClip: {fileID: 8300000, guid: 9e2673c891f2ebfe69d8aa60abba9a96, type: 3}

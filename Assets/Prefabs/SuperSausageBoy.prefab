@@ -103,7 +103,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 864491090119f3a43aa4c04ae5232720, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Player.SquashStretch
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.SquashStretch
   movement: {fileID: 9171169324332113233}
   maxStretchVelocity: 18
   stretchAmount: 0.3
@@ -206,7 +206,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 672fee4b0b5ac00898a5a4590359ea8b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Player.Controller2D
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.Controller2D
   collisionMask:
     serializedVersion: 2
     m_Bits: 256
@@ -226,7 +226,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3fe04b67370810528cd8e0648bbf84c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Player.PlayerMovement
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.PlayerMovement
   moveSpeed: 9
   sprintSpeed: 14
   accelTimeGrounded: 0.06
@@ -256,7 +256,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 11db01b76e6b4de97a92d8953b036459, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Player.PlayerHealth
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.PlayerHealth
   spawnPoint: {fileID: 0}
   respawnDelay: 0.05
   greaseSplatPrefab: {fileID: 8515917603359744770, guid: 660ab507d3dee7e2eb9b611ede869ae3, type: 3}
@@ -272,7 +272,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3643338604b362bebb7d468c804f8716, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Player.PlayerFeedback
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.PlayerFeedback
   hardLandingSpeed: 12
   deathTrauma: 0.7
   hardLandingTrauma: 0.25

@@ -172,7 +172,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8879caf8e837185e59e1f4ade473eb91, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SuperSausageBoy.Hazards.SawBlade
+  m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Hazards.SawBlade
   spinSpeed: 720
   patrol: 0
   patrolOffset: {x: 4, y: 0}

@@ -21,6 +21,7 @@ namespace SuperSausageBoy.Player
 
         PlayerMovement _movement;
         SpriteRenderer _sprite;
+        PlayerInput _playerInput;
         bool _dead;
 
         public System.Action OnDeath;
@@ -30,6 +31,26 @@ namespace SuperSausageBoy.Player
         {
             _movement = GetComponent<PlayerMovement>();
             _sprite = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        void OnEnable()
+        {
+            // Subscribe to the Restart action via the shared dispatcher (see the
+            // note in PlayerMovement: InvokeCSharpEvents requires explicit wiring).
+            _playerInput = GetComponent<PlayerInput>();
+            if (_playerInput != null)
+                _playerInput.onActionTriggered += OnActionTriggered;
+        }
+
+        void OnDisable()
+        {
+            if (_playerInput != null)
+                _playerInput.onActionTriggered -= OnActionTriggered;
+        }
+
+        void OnActionTriggered(InputAction.CallbackContext ctx)
+        {
+            if (ctx.action.name == "Restart") OnRestart(ctx);
         }
 
         void Start()

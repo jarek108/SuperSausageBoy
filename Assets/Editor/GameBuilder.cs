@@ -337,6 +337,10 @@ namespace SuperSausageBoy.EditorTools
             cam.backgroundColor = new Color(0.07f, 0.06f, 0.12f);
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGO.transform.position = new Vector3(0, 0, -10);
+            // AudioListener: code-created cameras don't get one automatically
+            // (only the editor's camera menu adds it). Without it, all audio is
+            // silent and Unity logs "no audio listener" warnings.
+            camGO.AddComponent<AudioListener>();
             var ppc = camGO.AddComponent<UnityEngine.U2D.PixelPerfectCamera>();
             ppc.assetsPPU = PPU;
             ppc.refResolutionX = 320;
@@ -433,6 +437,7 @@ namespace SuperSausageBoy.EditorTools
             cam.backgroundColor = Color.black;
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGO.transform.position = new Vector3(0, 0, -10);
+            camGO.AddComponent<AudioListener>(); // needed for intro narration/music
 
             // Canvas
             var canvasGO = new GameObject("Story Canvas");
@@ -556,6 +561,7 @@ namespace SuperSausageBoy.EditorTools
             cam.orthographic = true;
             cam.backgroundColor = new Color(0.1f, 0.08f, 0.05f);
             camGO.transform.position = new Vector3(0, 0, -10);
+            camGO.AddComponent<AudioListener>(); // needed for win music/SFX
 
             var canvasGO = new GameObject("Canvas");
             var canvas = canvasGO.AddComponent<Canvas>();
