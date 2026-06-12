@@ -57,3 +57,4 @@ playtest_report.txt
 input_test_report.txt
 console_check_report.txt
 playmode_results.xml
+mono_crash*

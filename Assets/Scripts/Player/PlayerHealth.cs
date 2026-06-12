@@ -15,6 +15,10 @@ namespace SuperSausageBoy.Player
         [Tooltip("Delay before respawn (keep tiny for the SMB instant-retry feel).")]
         public float respawnDelay = 0.05f;
 
+        [Header("Fall death")]
+        [Tooltip("If the player falls below this world Y, they die (fall off the level). Set well below the lowest geometry.")]
+        public float fallDeathY = -20f;
+
         [Header("Feedback")]
         public GameObject greaseSplatPrefab;
         public GameObject deathBurstPrefab;
@@ -57,6 +61,14 @@ namespace SuperSausageBoy.Player
         {
             if (spawnPoint != null)
                 transform.position = spawnPoint.position;
+        }
+
+        void Update()
+        {
+            // Fall death: dropping below the kill plane counts as a death so the
+            // player respawns instead of falling forever.
+            if (!_dead && transform.position.y < fallDeathY)
+                Die();
         }
 
         public void Die()

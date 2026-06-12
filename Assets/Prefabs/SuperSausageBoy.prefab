@@ -119,6 +119,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3081208722205384310}
+  - component: {fileID: 2285218214117794980}
   - component: {fileID: 1889363659888911266}
   - component: {fileID: 7700597131531772553}
   - component: {fileID: 9171169324332113233}
@@ -149,6 +150,33 @@ Transform:
   - {fileID: 5596596179482185580}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &2285218214117794980
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3956070377136055919}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 1
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0
 --- !u!61 &1889363659888911266
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -259,6 +287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SuperSausageBoy.Runtime::SuperSausageBoy.Player.PlayerHealth
   spawnPoint: {fileID: 0}
   respawnDelay: 0.05
+  fallDeathY: -20
   greaseSplatPrefab: {fileID: 8515917603359744770, guid: 660ab507d3dee7e2eb9b611ede869ae3, type: 3}
   deathBurstPrefab: {fileID: 2539688861806054577, guid: 79fae30e9eec72018b8d5f702eb8c04a, type: 3}
 --- !u!114 &3768945326400585556

@@ -179,6 +179,20 @@ namespace SuperSausageBoy.EditorTools
             sr.sprite = Spr("SausageBoy");
             sr.sortingOrder = 10;
 
+            // Kinematic Rigidbody2D: REQUIRED for OnTriggerEnter2D to fire.
+            // Unity 2D only raises trigger callbacks when at least one collider in
+            // the pair has a Rigidbody2D. Our movement is done manually via
+            // transform.Translate (custom raycast controller), so we keep the body
+            // Kinematic (physics never moves it) and enable full kinematic contacts
+            // so it still generates triggers against STATIC hazard/goal colliders.
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.simulated = true;
+            rb.useFullKinematicContacts = true;
+            rb.gravityScale = 0f;
+            rb.interpolation = RigidbodyInterpolation2D.None;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
             // Box collider sized to sprite bounds.
             var box = go.AddComponent<BoxCollider2D>();
             var s = sr.sprite.bounds.size;
